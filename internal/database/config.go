@@ -6,9 +6,9 @@ import (
 	"strconv"
 )
 
-// Config holds database configuration
+// Config contains database connection parameters and connection pool settings.
 type Config struct {
-	Type     string // "postgres", "sqlite", or "mysql"
+	Type     string // Database type: "postgres", "sqlite", or "mysql"
 	Host     string
 	Port     int
 	User     string
@@ -17,10 +17,11 @@ type Config struct {
 	SSLMode  string
 	MaxConns int
 	MaxIdle  int
-	FilePath string // For SQLite
+	FilePath string // For SQLite file path
 }
 
-// DefaultConfig returns default database configuration
+// DefaultConfig creates a database configuration from environment variables.
+// Defaults to SQLite if DB_TYPE is not set, otherwise configures based on DB_TYPE.
 func DefaultConfig() *Config {
 	dbType := getEnv("DB_TYPE", "sqlite")
 
@@ -33,7 +34,19 @@ func DefaultConfig() *Config {
 		}
 	}
 
-	// PostgreSQL configuration
+	if dbType == "mysql" {
+		return &Config{
+			Type:     "mysql",
+			Host:     getEnv("DB_HOST", "localhost"),
+			Port:     getEnvInt("DB_PORT", 3306),
+			User:     getEnv("DB_USER", "root"),
+			Password: getEnv("DB_PASSWORD", ""),
+			DBName:   getEnv("DB_NAME", "data_chatter"),
+			MaxConns: getEnvInt("DB_MAX_CONNS", 10),
+			MaxIdle:  getEnvInt("DB_MAX_IDLE", 5),
+		}
+	}
+
 	return &Config{
 		Type:     "postgres",
 		Host:     getEnv("DB_HOST", "localhost"),
@@ -47,24 +60,22 @@ func DefaultConfig() *Config {
 	}
 }
 
-// ConnectionString returns the database connection string
+// ConnectionString generates the appropriate connection string for the database type.
 func (c *Config) ConnectionString() string {
 	if c.Type == "sqlite" {
 		return c.FilePath
 	}
-	
+
 	if c.Type == "mysql" {
-		// MySQL connection string
 		return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 			c.User, c.Password, c.Host, c.Port, c.DBName)
 	}
 
-	// PostgreSQL connection string
 	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		c.Host, c.Port, c.User, c.Password, c.DBName, c.SSLMode)
 }
 
-// DriverName returns the database driver name
+// DriverName returns the database driver name for the configured database type.
 func (c *Config) DriverName() string {
 	if c.Type == "sqlite" {
 		return "sqlite3"
@@ -75,7 +86,7 @@ func (c *Config) DriverName() string {
 	return "postgres"
 }
 
-// getEnv gets an environment variable with a default value
+// getEnv retrieves an environment variable with a fallback default value.
 func getEnv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
@@ -83,7 +94,7 @@ func getEnv(key, defaultValue string) string {
 	return defaultValue
 }
 
-// getEnvInt gets an environment variable as integer with a default value
+// getEnvInt retrieves an environment variable as an integer with a fallback default value.
 func getEnvInt(key string, defaultValue int) int {
 	if value := os.Getenv(key); value != "" {
 		if intValue, err := strconv.Atoi(value); err == nil {

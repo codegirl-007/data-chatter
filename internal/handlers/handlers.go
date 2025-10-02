@@ -1,3 +1,4 @@
+// Package handlers provides HTTP request handlers for the data-chatter API.
 package handlers
 
 import (
@@ -10,14 +11,14 @@ import (
 	"data-chatter/internal/types"
 )
 
-// HealthResponse represents the health check response
+// HealthResponse contains health check status information.
 type HealthResponse struct {
 	Status    string    `json:"status"`
 	Timestamp time.Time `json:"timestamp"`
 	Uptime    string    `json:"uptime"`
 }
 
-// APIResponse represents a generic API response
+// APIResponse represents a standardized API response format.
 type APIResponse struct {
 	Message string      `json:"message"`
 	Data    interface{} `json:"data,omitempty"`
@@ -26,15 +27,14 @@ type APIResponse struct {
 
 var startTime = time.Now()
 
-// Global tool engine instance (will be initialized in main)
 var toolEngine *engine.ToolEngine
 
-// InitializeToolEngine initializes the global tool engine
+// InitializeToolEngine initializes the global tool engine with database connection.
 func InitializeToolEngine(dbConn *database.Connection) {
 	toolEngine = engine.NewToolEngine(dbConn)
 }
 
-// HealthHandler handles health check requests
+// HealthHandler provides server health status and uptime information.
 func HealthHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -53,7 +53,7 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// HomeHandler handles the root endpoint
+// HomeHandler serves the root endpoint with API information.
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -76,7 +76,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// APIHandler handles API requests
+// APIHandler handles generic API requests and returns request metadata.
 func APIHandler(w http.ResponseWriter, r *http.Request) {
 	response := APIResponse{
 		Message: "API endpoint reached",
@@ -92,7 +92,7 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// ToolsHandler handles requests to list available tools
+// ToolsHandler returns a list of all available tools for LLM integration.
 func ToolsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -110,7 +110,7 @@ func ToolsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// ToolCallHandler handles tool execution requests
+// ToolCallHandler executes multiple tool calls in batch and returns results.
 func ToolCallHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -140,7 +140,6 @@ func ToolCallHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Execute tools
 	results := toolEngine.ExecuteTools(request.Tools)
 	response := types.ToolExecutionResponse{
 		Results: results,
@@ -151,7 +150,7 @@ func ToolCallHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// SingleToolHandler handles single tool execution
+// SingleToolHandler executes a single tool call and returns the result.
 func SingleToolHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -181,7 +180,6 @@ func SingleToolHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Execute single tool
 	result, err := toolEngine.ExecuteTool(toolCall.Name, toolCall.Input)
 	if err != nil {
 		response := APIResponse{

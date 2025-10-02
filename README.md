@@ -148,8 +148,7 @@ go run scripts/test_database.go
 ## Available Tools
 
 ### Database Tools (for LLM)
-- `database_query` - Execute SQL SELECT queries
-- `database_schema` - Get database schema information
+- `database_query` - Execute SQL SELECT queries (schema is provided directly to LLM)
 
 ## Development
 

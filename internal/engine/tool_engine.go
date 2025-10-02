@@ -1,3 +1,4 @@
+// Package engine provides tool execution management for LLM integration.
 package engine
 
 import (
@@ -6,47 +7,38 @@ import (
 	"data-chatter/internal/types"
 )
 
-// ToolEngine manages tool execution and provides a centralized interface
+// ToolEngine manages tool registration and execution for LLM tool calls.
 type ToolEngine struct {
 	registry *types.ToolRegistry
 }
 
-// NewToolEngine creates a new tool engine with all tools registered
+// NewToolEngine creates a new tool engine and registers all available tools.
 func NewToolEngine(dbConn *database.Connection) *ToolEngine {
 	engine := &ToolEngine{
 		registry: types.NewToolRegistry(),
 	}
 
-	// Register all available tools
 	engine.registerTools(dbConn)
 
 	return engine
 }
 
-// registerTools registers all available tools with the registry
+// registerTools registers all available tools with the tool registry.
 func (te *ToolEngine) registerTools(dbConn *database.Connection) {
-	// Database tools
 	te.registry.RegisterTool("database_query", tools.NewDatabaseQueryTool(dbConn))
-	te.registry.RegisterTool("database_schema", tools.NewDatabaseSchemaTool(dbConn))
-	te.registry.RegisterTool("database_smart_query", tools.NewDatabaseSmartQueryTool(dbConn))
 }
 
-// ExecuteTools executes a list of tool calls
+// ExecuteTools executes multiple tool calls and returns their results.
 func (te *ToolEngine) ExecuteTools(toolCalls []types.ToolCall) []types.ToolResult {
 	return te.registry.ExecuteTools(toolCalls)
 }
 
-// ExecuteTool executes a single tool
+// ExecuteTool executes a single tool by name with the provided input parameters.
 func (te *ToolEngine) ExecuteTool(name string, input map[string]interface{}) (*types.ToolResult, error) {
 	return te.registry.ExecuteTool(name, input)
 }
 
-// GetAvailableTools returns all available tools
+// GetAvailableTools returns definitions for all registered tools.
 func (te *ToolEngine) GetAvailableTools() []types.ToolDefinition {
 	return te.registry.ListTools()
-}
-
-// GetTool returns a specific tool by name
-func (te *ToolEngine) GetTool(name string) (types.ToolRegistryEntry, bool) {
-	return te.registry.GetTool(name)
 }

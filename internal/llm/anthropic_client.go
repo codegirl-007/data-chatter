@@ -174,19 +174,13 @@ func (c *AnthropicClient) getAvailableTools() []Tool {
 	return []Tool{
 		{
 			Name:        "database_query",
-			Description: "Execute a read-only SQL SELECT query on the database",
+			Description: "Execute a read-only SQL SELECT query on the database (include LIMIT clause if needed)",
 			InputSchema: map[string]interface{}{
 				"type": "object",
 				"properties": map[string]interface{}{
 					"query": map[string]interface{}{
 						"type":        "string",
-						"description": "SQL SELECT query to execute",
-					},
-					"limit": map[string]interface{}{
-						"type":        "integer",
-						"description": "Maximum number of rows to return (default: 100, max: 1000)",
-						"minimum":     1,
-						"maximum":     1000,
+						"description": "SQL SELECT query to execute (include LIMIT clause if needed)",
 					},
 				},
 				"required": []string{"query"},
